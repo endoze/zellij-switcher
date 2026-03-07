@@ -1,0 +1,23 @@
+layout {
+  cwd "."
+  tab_template name="ui" {
+    pane size=1 borderless=true {
+      plugin location="tab-bar"
+    }
+    children
+    pane size=2 borderless=true {
+      plugin location="status-bar"
+    }
+  }
+  ui name="dev" focus=true {
+    pane split_direction="vertical" {
+      pane edit="src/main.rs"
+    }
+    pane split_direction="vertical" {
+      pane command="cargo" {
+        args "watch" "-x" "build --target wasm32-wasip1"
+      }
+      pane
+    }
+  }
+}

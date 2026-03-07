@@ -1,0 +1,3 @@
+[default]
+exclude-files = ["src/main.rs"]
+run-types = ["Lib"]

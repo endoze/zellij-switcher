@@ -1,0 +1,23 @@
+keybinds {
+    locked {
+        bind "Ctrl g" { SwitchToMode "normal"; }
+    }
+    shared_except "locked" {
+        bind "Ctrl g" { SwitchToMode "locked"; }
+    }
+    normal {
+        bind "y" {
+            LaunchOrFocusPlugin "file:/Users/endoze/Projects/zellij-switcher/target/wasm32-wasip1/debug/zellij-switcher.wasm" {
+                floating true
+            }
+            SwitchToMode "locked"
+        }
+    }
+}
+
+load_plugins {
+    "file:/Users/endoze/Projects/zellij-switcher/target/wasm32-wasip1/debug/zellij-switcher.wasm"
+}
+
+default_mode "locked"
+show_startup_tips false
