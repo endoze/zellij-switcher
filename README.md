@@ -1,5 +1,8 @@
 # Zellij Switcher
 
+![Build Status](https://github.com/endoze/zellij-switcher/actions/workflows/ci.yml/badge.svg?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/endoze/zellij-switcher/badge.svg?branch=master)](https://coveralls.io/github/endoze/zellij-switcher?branch=master)
+
 A session manager plugin for [Zellij](https://zellij.dev) that lets you switch, create, rename, delete, and resurrect sessions without leaving zellij.
 
 ## Features
