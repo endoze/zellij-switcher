@@ -18,7 +18,5 @@ jobs:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
       - uses: release-plz/action@v0.5
-        with:
-          command: release-pr-and-release
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
