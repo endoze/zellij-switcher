@@ -22,6 +22,18 @@ impl NormalHandler {
     }
   }
 
+  /// Updates `selected_index` to track a session by name after a reorder.
+  /// Searches the unified entries list. Falls back to `clamp_index()` if
+  /// the session is no longer present.
+  pub fn preserve_selection(&mut self, name: &str, store: &SessionStore) {
+    if let Some(pos) = store.entries.iter().position(|e| e.name() == name) {
+      self.selected_index = pos;
+      return;
+    }
+
+    self.clamp_index(store.total_count());
+  }
+
   /// Processes a key press in Normal mode, returning navigation changes,
   /// session operations, or mode transitions.
   pub fn handle_key(&mut self, key: BareKey, store: &SessionStore) -> HandlerResult {
@@ -218,7 +230,7 @@ mod tests {
   fn enter_switches_dead_session() {
     let store = make_session_store(&[("s1", true)], &["dead1"]);
     let mut handler = NormalHandler {
-      selected_index: 1,
+      selected_index: 0,
       ..Default::default()
     };
     let result = handler.handle_key(BareKey::Enter, &store);
@@ -327,7 +339,7 @@ mod tests {
   fn d_deletes_dead_session() {
     let store = make_session_store(&[("s1", true)], &["dead1"]);
     let mut handler = NormalHandler {
-      selected_index: 1,
+      selected_index: 0,
       ..Default::default()
     };
     let result = handler.handle_key(BareKey::Char('d'), &store);
@@ -370,6 +382,45 @@ mod tests {
   }
 
   #[test]
+  fn preserve_selection_finds_active_session() {
+    let store = make_session_store(
+      &[("alpha", true), ("bravo", false), ("charlie", false)],
+      &[],
+    );
+    let mut handler = NormalHandler {
+      selected_index: 0,
+      ..Default::default()
+    };
+    handler.preserve_selection("charlie", &store);
+
+    assert_eq!(handler.selected_index, 2);
+  }
+
+  #[test]
+  fn preserve_selection_finds_dead_session() {
+    let store = make_session_store(&[("s1", true)], &["dead1", "dead2"]);
+    let mut handler = NormalHandler {
+      selected_index: 0,
+      ..Default::default()
+    };
+    handler.preserve_selection("dead2", &store);
+
+    assert_eq!(handler.selected_index, 1);
+  }
+
+  #[test]
+  fn preserve_selection_clamps_when_missing() {
+    let store = make_session_store(&[("s1", true), ("s2", false)], &[]);
+    let mut handler = NormalHandler {
+      selected_index: 5,
+      ..Default::default()
+    };
+    handler.preserve_selection("gone", &store);
+
+    assert_eq!(handler.selected_index, 1);
+  }
+
+  #[test]
   fn clamp_index_within_bounds() {
     let mut handler = NormalHandler {
       selected_index: 1,
@@ -387,6 +438,18 @@ mod tests {
       ..Default::default()
     };
     handler.clamp_index(1);
+
+    assert_eq!(handler.selected_index, 0);
+  }
+
+  #[test]
+  fn preserve_selection_tracks_session_that_moved_to_dead() {
+    let store = make_session_store(&[("s1", true)], &["formerly_active"]);
+    let mut handler = NormalHandler {
+      selected_index: 0,
+      ..Default::default()
+    };
+    handler.preserve_selection("formerly_active", &store);
 
     assert_eq!(handler.selected_index, 0);
   }

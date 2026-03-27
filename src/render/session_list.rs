@@ -1,41 +1,38 @@
 use crate::config::PluginConfig;
 use crate::handlers::normal::NormalHandler;
-use crate::session_store::SessionStore;
+use crate::session_store::{SessionEntry, SessionStore};
 
 use super::list_helpers::{self, ListItem, ListMarker};
 
-/// Converts active and resurrectable sessions into [`ListItem`]s, marking
+/// Converts the unified session entries into [`ListItem`]s, marking
 /// the current session as "(active)" and dead sessions as "(dead)".
 pub fn build_session_items<'a>(
   store: &'a SessionStore,
   config: &PluginConfig,
 ) -> Vec<ListItem<'a>> {
   store
-    .sessions
+    .entries
     .iter()
-    .map(|s| ListItem {
-      name: &s.name,
-      marker: if s.is_current_session {
-        Some(ListMarker {
-          text: " (active)",
-          color: config.active_marker_color,
-        })
-      } else {
-        None
+    .map(|entry| match entry {
+      SessionEntry::Active(s) => ListItem {
+        name: &s.name,
+        marker: if s.is_current_session {
+          Some(ListMarker {
+            text: " (active)",
+            color: config.active_marker_color,
+          })
+        } else {
+          None
+        },
+      },
+      SessionEntry::Dead { name, .. } => ListItem {
+        name: name.as_str(),
+        marker: Some(ListMarker {
+          text: " (dead)",
+          color: config.dead_marker_color,
+        }),
       },
     })
-    .chain(
-      store
-        .resurrectable_sessions
-        .iter()
-        .map(|(name, _)| ListItem {
-          name: name.as_str(),
-          marker: Some(ListMarker {
-            text: " (dead)",
-            color: config.dead_marker_color,
-          }),
-        }),
-    )
     .collect()
 }
 
@@ -97,10 +94,10 @@ mod tests {
     let items = build_session_items(&store, &config);
 
     assert_eq!(items.len(), 2);
-    assert_eq!(items[0].name, "s1");
-    assert_eq!(items[0].marker.as_ref().unwrap().text, " (active)");
-    assert_eq!(items[1].name, "dead1");
-    assert_eq!(items[1].marker.as_ref().unwrap().text, " (dead)");
+    assert_eq!(items[0].name, "dead1");
+    assert_eq!(items[0].marker.as_ref().unwrap().text, " (dead)");
+    assert_eq!(items[1].name, "s1");
+    assert_eq!(items[1].marker.as_ref().unwrap().text, " (active)");
   }
 
   #[test]
@@ -122,7 +119,7 @@ mod tests {
     };
     let items = build_session_items(&store, &config);
 
-    assert_eq!(items[0].marker.as_ref().unwrap().color, 3);
-    assert_eq!(items[1].marker.as_ref().unwrap().color, 2);
+    assert_eq!(items[0].marker.as_ref().unwrap().color, 2);
+    assert_eq!(items[1].marker.as_ref().unwrap().color, 3);
   }
 }

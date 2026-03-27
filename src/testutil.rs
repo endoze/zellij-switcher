@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::time::Duration;
 use zellij_tile::prelude::*;
 
-use crate::session_store::SessionStore;
+use crate::session_store::{SessionEntry, SessionStore};
 
 pub fn make_session(name: &str, is_current: bool) -> SessionInfo {
   SessionInfo {
@@ -18,22 +18,29 @@ pub fn make_session(name: &str, is_current: bool) -> SessionInfo {
     web_clients_allowed: false,
     web_client_count: 0,
     tab_history: BTreeMap::new(),
+    pane_history: BTreeMap::new(),
+    creation_time: Duration::from_secs(0),
   }
 }
 
 pub fn make_session_store(active: &[(&str, bool)], dead: &[&str]) -> SessionStore {
-  let sessions: Vec<SessionInfo> = active
-    .iter()
-    .map(|(name, current)| make_session(name, *current))
-    .collect();
-  let resurrectable: Vec<(String, Duration)> = dead
-    .iter()
-    .map(|name| (name.to_string(), Duration::from_secs(0)))
-    .collect();
+  let mut entries: Vec<SessionEntry> = Vec::new();
+
+  for (name, current) in active {
+    entries.push(SessionEntry::Active(make_session(name, *current)));
+  }
+
+  for name in dead {
+    entries.push(SessionEntry::Dead {
+      name: name.to_string(),
+      duration: Duration::from_secs(0),
+    });
+  }
+
+  entries.sort_by(|a, b| a.name().cmp(b.name()));
 
   SessionStore {
-    sessions,
-    resurrectable_sessions: resurrectable,
+    entries,
     ..Default::default()
   }
 }

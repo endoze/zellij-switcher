@@ -67,7 +67,10 @@ mod tests {
   #[test]
   fn builds_custom_layout_without_marker() {
     let store = SessionStore {
-      available_layouts: vec![LayoutInfo::File("custom".to_string())],
+      available_layouts: vec![LayoutInfo::File(
+        "custom".to_string(),
+        LayoutMetadata::default(),
+      )],
       ..Default::default()
     };
     let config = PluginConfig::default();
@@ -92,7 +95,7 @@ mod tests {
     let store = SessionStore {
       available_layouts: vec![
         LayoutInfo::BuiltIn("default".to_string()),
-        LayoutInfo::File("my-layout".to_string()),
+        LayoutInfo::File("my-layout".to_string(), LayoutMetadata::default()),
       ],
       ..Default::default()
     };

@@ -9,6 +9,7 @@ keybinds {
         bind "y" {
             LaunchOrFocusPlugin "file:/Users/endoze/Projects/zellij-switcher/target/wasm32-wasip1/debug/zellij-switcher.wasm" {
                 floating true
+                move_to_focused_tab true
             }
             SwitchToMode "locked"
         }
