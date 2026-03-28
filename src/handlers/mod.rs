@@ -8,3 +8,5 @@ pub mod layout_select;
 pub mod lifecycle;
 /// Session list navigation and operations in Normal mode.
 pub mod normal;
+/// Visibility and tab-tracking handlers for cross-tab pane management.
+pub mod visibility;

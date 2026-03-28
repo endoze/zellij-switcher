@@ -63,6 +63,10 @@ pub enum PluginAction {
   RequestPermissions,
   /// Subscribe to the Zellij events this plugin listens for.
   Subscribe,
+  /// Move a pane to the specified tab position.
+  MoveToTab(PaneId, usize),
+  /// Show the plugin pane, focus it, and switch to its tab.
+  ShowSelf,
 }
 
 /// The result returned by every key handler, carrying render intent,

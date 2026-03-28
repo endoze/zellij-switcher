@@ -24,6 +24,10 @@ struct Plugin {
   layout_select: LayoutSelectHandler,
   /// User-configurable display settings.
   config: PluginConfig,
+  /// The plugin's own pane ID, used to move the pane between tabs.
+  plugin_pane_id: Option<PaneId>,
+  /// The 0-indexed position of the currently active tab.
+  active_tab_position: Option<usize>,
 }
 
 register_plugin!(Plugin);
@@ -47,8 +51,17 @@ fn execute_actions(actions: Vec<PluginAction>) {
         ]);
       }
       PluginAction::Subscribe => {
-        subscribe(&[EventType::Key, EventType::SessionUpdate]);
+        subscribe(&[
+          EventType::Key,
+          EventType::SessionUpdate,
+          EventType::TabUpdate,
+          EventType::Visible,
+        ]);
       }
+      PluginAction::MoveToTab(pane_id, tab_position) => {
+        break_panes_to_tab_with_index(&[pane_id], tab_position, false);
+      }
+      PluginAction::ShowSelf => show_self(true),
     }
   }
 }
@@ -85,6 +98,10 @@ impl ZellijPlugin for Plugin {
   /// Initializes plugin configuration and requests permissions/subscriptions.
   fn load(&mut self, configuration: BTreeMap<String, String>) {
     self.config = PluginConfig::from(configuration);
+
+    let ids = get_plugin_ids();
+    self.plugin_pane_id = Some(PaneId::Plugin(ids.plugin_id));
+
     execute_actions(zellij_switcher::handlers::lifecycle::handle_load());
   }
 
@@ -92,9 +109,20 @@ impl ZellijPlugin for Plugin {
   fn update(&mut self, event: Event) -> bool {
     match event {
       Event::SessionUpdate(sessions, resurrectable_sessions) => {
-        self.store.update(sessions, resurrectable_sessions);
-        self.normal.clamp_index(self.store.total_count());
-        true
+        let previous_name = self
+          .store
+          .selected_session(self.normal.selected_index)
+          .map(|s| s.name().to_owned());
+        let changed = self.store.update(sessions, resurrectable_sessions);
+
+        if changed {
+          match previous_name {
+            Some(name) => self.normal.preserve_selection(&name, &self.store),
+            None => self.normal.clamp_index(self.store.total_count()),
+          }
+        }
+
+        changed
       }
       Event::Key(key) if key.has_no_modifiers() => {
         let result = match self.mode {
@@ -115,6 +143,23 @@ impl ZellijPlugin for Plugin {
             &mut self.layout_select,
           );
         }
+
+        result.render
+      }
+      Event::TabUpdate(tab_infos) => {
+        self.active_tab_position =
+          zellij_switcher::handlers::visibility::active_tab_position(&tab_infos);
+
+        false
+      }
+      Event::Visible(visible) => {
+        let result = zellij_switcher::handlers::visibility::handle_visible(
+          visible,
+          self.plugin_pane_id,
+          self.active_tab_position,
+        );
+
+        execute_actions(result.actions);
 
         result.render
       }
