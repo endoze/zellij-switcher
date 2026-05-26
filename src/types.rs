@@ -67,6 +67,8 @@ pub enum PluginAction {
   MoveToTab(PaneId, usize),
   /// Show the plugin pane, focus it, and switch to its tab.
   ShowSelf,
+  /// Arm a one-shot timer that will fire `Event::Timer` after `secs` seconds.
+  SetTimeout(f64),
 }
 
 /// The result returned by every key handler, carrying render intent,

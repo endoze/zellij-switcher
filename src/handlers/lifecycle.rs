@@ -1,9 +1,13 @@
 use crate::types::PluginAction;
 
-/// Returns the actions needed during plugin load: requesting permissions
-/// and subscribing to events.
+/// Returns the actions needed during plugin load: subscribing to events,
+/// then requesting permissions. Order matters — if permissions are
+/// already cached, the host fires `PermissionRequestResult(Granted)`
+/// immediately, so the subscription must be in place first or the
+/// event is dropped and the plugin never learns it can pull session
+/// data.
 pub fn handle_load() -> Vec<PluginAction> {
-  vec![PluginAction::RequestPermissions, PluginAction::Subscribe]
+  vec![PluginAction::Subscribe, PluginAction::RequestPermissions]
 }
 
 #[cfg(test)]
@@ -16,7 +20,7 @@ mod tests {
 
     assert_eq!(
       actions,
-      vec![PluginAction::RequestPermissions, PluginAction::Subscribe]
+      vec![PluginAction::Subscribe, PluginAction::RequestPermissions]
     );
   }
 }
