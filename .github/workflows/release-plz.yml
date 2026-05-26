@@ -17,6 +17,12 @@ jobs:
         with:
           fetch-depth: 0
       - uses: dtolnay/rust-toolchain@stable
+      - name: Create FFI stub for native builds
+        run: |
+          echo 'void host_run_plugin_command(void) {}' > /tmp/stub.c
+          cc -c /tmp/stub.c -o /tmp/stub.o
+          ar rcs /tmp/libzellij_stubs.a /tmp/stub.o
       - uses: release-plz/action@v0.5
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
+          RUSTFLAGS: "-L /tmp -l static=zellij_stubs"
