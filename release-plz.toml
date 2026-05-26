@@ -5,3 +5,7 @@ git_release_enable = true
 publish = false
 git_release_draft = false
 git_only = true
+
+[[package]]
+name = "zellij-switcher"
+release = true
