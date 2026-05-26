@@ -2,7 +2,6 @@
 name = "zellij-switcher"
 version = "0.2.0"
 edition = "2024"
-publish = false
 
 [dependencies]
 zellij-tile = "0.44.3"
